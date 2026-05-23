@@ -100,6 +100,7 @@
           <button type="button" class="nav-link nav-active" data-panel-nav="home">Home</button>
           <button type="button" class="nav-link" data-panel-nav="directory">Directory</button>
           <button type="button" class="nav-link" data-panel-nav="profile">My profile</button>
+          <button type="button" class="nav-link" data-panel-nav="messages">Messages</button>
         </nav>
 
         <main class="app-main">
@@ -123,7 +124,10 @@
               </article>
               <article class="card">
                 <h3>Messages</h3>
-                <p class="muted">1:1 and group chats. Coming in Phase 4.</p>
+                <p class="muted">Use public chat or direct messages with colleagues.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-goto-panel="messages">
+                  Open messages
+                </button>
               </article>
             </div>
           </section>
@@ -179,6 +183,36 @@
           <section id="panel-member" class="app-panel" hidden>
             <button type="button" id="member-back-btn" class="link-btn back-link">← Back to directory</button>
             <div id="member-profile" class="member-profile-wrap"></div>
+          </section>
+
+          <section id="panel-messages" class="app-panel" hidden>
+            <h2>Messages</h2>
+            <p class="muted panel-intro">Share updates in public chat or message a friend directly.</p>
+
+            <div class="messages-layout">
+              <article class="card">
+                <h3>Public chat</h3>
+                <div id="public-messages-list" class="message-list"></div>
+                <form id="public-message-form" class="inline-form">
+                  <input type="text" name="text" maxlength="500" placeholder="Write to everyone..." required />
+                  <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                </form>
+              </article>
+
+              <article class="card">
+                <h3>Direct messages</h3>
+                <label class="search-label">
+                  Friend
+                  <select id="direct-friend-select"></select>
+                </label>
+                <div id="direct-messages-list" class="message-list"></div>
+                <form id="direct-message-form" class="inline-form">
+                  <input type="text" name="text" maxlength="500" placeholder="Write a direct message..." required />
+                  <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                </form>
+              </article>
+            </div>
+            <p id="messages-message" class="form-message" hidden></p>
           </section>
         </main>
       </section>

@@ -25,13 +25,22 @@ backend/      Node.js + Express (API, sessions)
 docs/         Development plan and team docs
 ```
 
-## Current features (Phase 0–2)
+## Current features
 
 - User signup, login, logout, and session persistence
 - Member directory with search (name, department, email)
 - User profiles: edit name, department, bio
 - Profile photo upload (JPEG, PNG, GIF, WebP, max 2MB)
 - View other members’ profiles from the directory
+- Add and remove friends
+- Public chat messages visible to all members
+- Direct messages between two members
+
+## Security and reliability updates
+
+- Safer file-locking for user/message writes (prevents lock stealing and write races)
+- Session cookies are HTTP-only and use `sameSite=lax`
+- `SESSION_SECRET` is required when `NODE_ENV=production`
 
 ## API
 
@@ -45,7 +54,14 @@ docs/         Development plan and team docs
 | GET | `/api/users/me` | Current user profile |
 | PUT | `/api/users/me` | Update profile |
 | POST | `/api/users/me/avatar` | Upload profile photo (`multipart/form-data`, field `avatar`) |
+| GET | `/api/users/me/friends` | Current user's friends |
+| POST | `/api/users/:id/friends` | Add a friend |
+| DELETE | `/api/users/:id/friends` | Remove a friend |
 | GET | `/api/users/:id` | View a member’s profile |
+| GET | `/api/messages/public` | Public chat messages |
+| POST | `/api/messages/public` | Send a public chat message |
+| GET | `/api/messages/direct/:userId` | Direct messages with a member |
+| POST | `/api/messages/direct/:userId` | Send direct message to a member |
 
 ## Team
 

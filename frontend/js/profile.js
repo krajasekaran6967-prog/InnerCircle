@@ -72,7 +72,7 @@ export function initProfile({
   };
 }
 
-export function initMemberView({ containerEl, backBtnEl, onBack }) {
+export function initMemberView({ containerEl, backBtnEl, onBack, onAddFriend, onRemoveFriend, onMessage }) {
   backBtnEl.addEventListener("click", onBack);
 
   return {
@@ -86,6 +86,10 @@ export function initMemberView({ containerEl, backBtnEl, onBack }) {
           ? `<img src="${user.thumbnailUrl}" alt="" class="avatar-img" />`
           : `<span class="avatar-initials">${getInitials(user.name)}</span>`;
 
+        const friendAction = user.isFriend
+          ? `<button type="button" class="btn btn-secondary btn-sm" data-remove-friend="${user.id}">Remove friend</button>`
+          : `<button type="button" class="btn btn-primary btn-sm" data-add-friend="${user.id}">Add friend</button>`;
+
         containerEl.innerHTML = `
           <div class="profile-display">
             <div class="avatar avatar-xl">${avatar}</div>
@@ -93,10 +97,29 @@ export function initMemberView({ containerEl, backBtnEl, onBack }) {
               <h2>${escapeHtml(user.name)}</h2>
               <p class="muted">${escapeHtml(user.department)}</p>
               <p class="member-email">${escapeHtml(user.email)}</p>
+              <div class="member-actions">
+                ${friendAction}
+                <button type="button" class="btn btn-secondary btn-sm" data-message-member="${user.id}">
+                  Message
+                </button>
+              </div>
               ${user.bio ? `<p class="profile-bio">${escapeHtml(user.bio)}</p>` : '<p class="muted">No bio yet.</p>'}
             </div>
           </div>
         `;
+
+        const addBtn = containerEl.querySelector("[data-add-friend]");
+        if (addBtn) {
+          addBtn.addEventListener("click", () => onAddFriend(user.id));
+        }
+        const removeBtn = containerEl.querySelector("[data-remove-friend]");
+        if (removeBtn) {
+          removeBtn.addEventListener("click", () => onRemoveFriend(user.id));
+        }
+        const messageBtn = containerEl.querySelector("[data-message-member]");
+        if (messageBtn) {
+          messageBtn.addEventListener("click", () => onMessage(user.id));
+        }
       } catch (error) {
         containerEl.innerHTML = `<p class="form-message error">${escapeHtml(error.message)}</p>`;
       }

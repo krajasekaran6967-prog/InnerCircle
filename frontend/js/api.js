@@ -51,9 +51,33 @@ export const api = {
   updateProfile(body) {
     return request("/users/me", { method: "PUT", body: JSON.stringify(body) });
   },
+  getFriends() {
+    return request("/users/me/friends");
+  },
+  addFriend(id) {
+    return request(`/users/${id}/friends`, { method: "POST" });
+  },
+  removeFriend(id) {
+    return request(`/users/${id}/friends`, { method: "DELETE" });
+  },
   uploadAvatar(file) {
     const formData = new FormData();
     formData.append("avatar", file);
     return request("/users/me/avatar", { method: "POST", body: formData });
+  },
+  getPublicMessages(limit = 50) {
+    return request(`/messages/public?limit=${encodeURIComponent(limit)}`);
+  },
+  postPublicMessage(text) {
+    return request("/messages/public", { method: "POST", body: JSON.stringify({ text }) });
+  },
+  getDirectMessages(userId, limit = 100) {
+    return request(`/messages/direct/${encodeURIComponent(userId)}?limit=${encodeURIComponent(limit)}`);
+  },
+  postDirectMessage(userId, text) {
+    return request(`/messages/direct/${encodeURIComponent(userId)}`, {
+      method: "POST",
+      body: JSON.stringify({ text }),
+    });
   },
 };

@@ -29,7 +29,7 @@ router.post("/signup", async (req, res) => {
 
   req.session.userId = user.id;
 
-  return res.status(201).json({ user: toPublicUser(user) });
+  return res.status(201).json({ user: toPublicUser(user, req.session.userId) });
 });
 
 router.post("/login", async (req, res) => {
@@ -51,7 +51,7 @@ router.post("/login", async (req, res) => {
 
   req.session.userId = user.id;
 
-  return res.json({ user: toPublicUser(user) });
+  return res.json({ user: toPublicUser(user, req.session.userId) });
 });
 
 router.post("/logout", (req, res) => {
@@ -76,7 +76,7 @@ router.get("/me", (req, res) => {
     return res.status(401).json({ error: "Not authenticated." });
   }
 
-  return res.json({ user: toPublicUser(user) });
+  return res.json({ user: toPublicUser(user, req.session.userId) });
 });
 
 module.exports = router;

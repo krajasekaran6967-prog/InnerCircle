@@ -8,13 +8,21 @@ const LOCK_FILE = path.join(DATA_DIR, ".users.lock");
 
 function acquireLock() {
   const start = Date.now();
-  while (fs.existsSync(LOCK_FILE)) {
-    if (Date.now() - start > 5000) {
-      throw new Error("Timeout waiting for lock");
+  while (true) {
+    try {
+      const fd = fs.openSync(LOCK_FILE, "wx");
+      fs.writeFileSync(fd, String(process.pid));
+      fs.closeSync(fd);
+      return;
+    } catch (error) {
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
+      if (Date.now() - start > 5000) {
+        throw new Error("Timeout waiting for lock");
+      }
     }
-    fs.unlinkSync(LOCK_FILE);
   }
-  fs.writeFileSync(LOCK_FILE, String(process.pid));
 }
 
 function releaseLock() {
@@ -40,7 +48,10 @@ function readUsers() {
     return [];
   }
 
-  return JSON.parse(raw);
+  return JSON.parse(raw).map((user) => ({
+    ...user,
+    friends: user.friends || [],
+  }));
 }
 
 function writeUsers(users) {
@@ -72,6 +83,7 @@ function createUser({ email, passwordHash, name, department }) {
       department: department.trim(),
       bio: "",
       thumbnailUrl: "",
+      friends: [],
       createdAt: new Date().toISOString(),
     };
 
@@ -128,12 +140,77 @@ function searchUsers(query) {
   });
 }
 
-function toPublicUser(user) {
+function listFriends(id) {
+  const users = readUsers();
+  const user = users.find((entry) => entry.id === id);
+  if (!user) {
+    return [];
+  }
+  const friendSet = new Set(user.friends || []);
+  return users.filter((entry) => friendSet.has(entry.id));
+}
+
+function addFriend(userId, friendId) {
+  if (userId === friendId) {
+    throw new Error("You cannot add yourself as a friend.");
+  }
+
+  acquireLock();
+  try {
+    const users = readUsers();
+    const userIndex = users.findIndex((entry) => entry.id === userId);
+    const friendIndex = users.findIndex((entry) => entry.id === friendId);
+    if (userIndex === -1 || friendIndex === -1) {
+      return null;
+    }
+
+    users[userIndex].friends = users[userIndex].friends || [];
+    users[friendIndex].friends = users[friendIndex].friends || [];
+
+    if (!users[userIndex].friends.includes(friendId)) {
+      users[userIndex].friends.push(friendId);
+    }
+    if (!users[friendIndex].friends.includes(userId)) {
+      users[friendIndex].friends.push(userId);
+    }
+
+    writeUsers(users);
+    return users[userIndex];
+  } finally {
+    releaseLock();
+  }
+}
+
+function removeFriend(userId, friendId) {
+  acquireLock();
+  try {
+    const users = readUsers();
+    const userIndex = users.findIndex((entry) => entry.id === userId);
+    const friendIndex = users.findIndex((entry) => entry.id === friendId);
+    if (userIndex === -1 || friendIndex === -1) {
+      return null;
+    }
+
+    users[userIndex].friends = (users[userIndex].friends || []).filter((id) => id !== friendId);
+    users[friendIndex].friends = (users[friendIndex].friends || []).filter((id) => id !== userId);
+    writeUsers(users);
+    return users[userIndex];
+  } finally {
+    releaseLock();
+  }
+}
+
+function toPublicUser(user, viewerId = null) {
   if (!user) {
     return null;
   }
 
   const { passwordHash, ...publicUser } = user;
+  publicUser.friends = publicUser.friends || [];
+  publicUser.friendCount = publicUser.friends.length;
+  if (viewerId) {
+    publicUser.isFriend = publicUser.friends.includes(viewerId);
+  }
   return publicUser;
 }
 
@@ -144,5 +221,8 @@ module.exports = {
   createUser,
   updateUser,
   searchUsers,
+  listFriends,
+  addFriend,
+  removeFriend,
   toPublicUser,
 };
