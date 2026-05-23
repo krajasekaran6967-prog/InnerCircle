@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InnerCircle — Employee Community</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <section id="view-landing" class="view hero">
+        <div class="hero-content">
+          <div class="logo-mark" aria-hidden="true">IC</div>
+          <h1>InnerCircle</h1>
+          <p class="tagline">
+            Connect with colleagues, build community, and collaborate across teams.
+          </p>
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" data-nav="login">Log in</button>
+            <button type="button" class="btn btn-secondary" data-nav="signup">Create account</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-login" class="view auth-view" hidden>
+        <div class="auth-card">
+          <h2>Welcome back</h2>
+          <p class="auth-subtitle">Sign in to your InnerCircle account</p>
+          <form id="login-form" class="form">
+            <label>
+              Email
+              <input type="email" name="email" required autocomplete="email" />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" required autocomplete="current-password" />
+            </label>
+            <p id="login-message" class="form-message" hidden></p>
+            <button type="submit" class="btn btn-primary btn-full">Log in</button>
+          </form>
+          <p class="auth-footer">
+            New here?
+            <button type="button" class="link-btn" data-nav="signup">Create an account</button>
+          </p>
+          <button type="button" class="link-btn back-link" data-nav="landing">Back</button>
+        </div>
+      </section>
+
+      <section id="view-signup" class="view auth-view" hidden>
+        <div class="auth-card">
+          <h2>Join InnerCircle</h2>
+          <p class="auth-subtitle">Register with your work details</p>
+          <form id="signup-form" class="form">
+            <label>
+              Full name
+              <input type="text" name="name" required autocomplete="name" />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" required autocomplete="email" />
+            </label>
+            <label>
+              Department
+              <input type="text" name="department" required placeholder="e.g. Engineering" />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                name="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+              />
+            </label>
+            <p id="signup-message" class="form-message" hidden></p>
+            <button type="submit" class="btn btn-primary btn-full">Create account</button>
+          </form>
+          <p class="auth-footer">
+            Already have an account?
+            <button type="button" class="link-btn" data-nav="login">Log in</button>
+          </p>
+          <button type="button" class="link-btn back-link" data-nav="landing">Back</button>
+        </div>
+      </section>
+
+      <section id="view-app" class="view app-shell" hidden>
+        <header class="app-header">
+          <div class="app-header-brand">
+            <div class="logo-mark small" aria-hidden="true">IC</div>
+            <div>
+              <p class="app-header-title">InnerCircle</p>
+              <p class="muted app-header-user">Hi, <span id="nav-header-name"></span></p>
+            </div>
+          </div>
+          <button type="button" id="logout-btn" class="btn btn-secondary btn-sm">Log out</button>
+        </header>
+
+        <nav class="app-nav" aria-label="Main">
+          <button type="button" class="nav-link nav-active" data-panel-nav="home">Home</button>
+          <button type="button" class="nav-link" data-panel-nav="directory">Directory</button>
+          <button type="button" class="nav-link" data-panel-nav="profile">My profile</button>
+        </nav>
+
+        <main class="app-main">
+          <section id="panel-home" class="app-panel">
+            <h2>Hello, <span id="welcome-name"></span></h2>
+            <p class="muted welcome-line"><span id="welcome-department"></span></p>
+            <div class="card-grid">
+              <article class="card card-action">
+                <h3>Member directory</h3>
+                <p class="muted">Find colleagues across departments.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-goto-panel="directory">
+                  Browse directory
+                </button>
+              </article>
+              <article class="card card-action">
+                <h3>Your profile</h3>
+                <p class="muted">Update your photo, bio, and details.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-goto-panel="profile">
+                  Edit profile
+                </button>
+              </article>
+              <article class="card">
+                <h3>Messages</h3>
+                <p class="muted">1:1 and group chats. Coming in Phase 4.</p>
+              </article>
+            </div>
+          </section>
+
+          <section id="panel-directory" class="app-panel" hidden>
+            <h2>Member directory</h2>
+            <p class="muted panel-intro">Search and connect with colleagues.</p>
+            <label class="search-label">
+              Search
+              <input
+                type="search"
+                id="directory-search"
+                placeholder="Name, department, or email"
+                autocomplete="off"
+              />
+            </label>
+            <div id="directory-list" class="member-list"></div>
+            <p id="directory-empty" class="muted empty-state" hidden>No members match your search.</p>
+          </section>
+
+          <section id="panel-profile" class="app-panel" hidden>
+            <h2>My profile</h2>
+            <p class="muted panel-intro">Your photo and details are visible to other employees.</p>
+
+            <div class="profile-edit">
+              <div class="avatar-upload">
+                <div id="avatar-preview" class="avatar avatar-xl"></div>
+                <label class="btn btn-secondary btn-sm avatar-upload-btn">
+                  Change photo
+                  <input type="file" id="avatar-input" accept="image/jpeg,image/png,image/gif,image/webp" hidden />
+                </label>
+              </div>
+
+              <form id="profile-form" class="form profile-form">
+                <label>
+                  Full name
+                  <input type="text" name="name" required />
+                </label>
+                <label>
+                  Department
+                  <input type="text" name="department" required />
+                </label>
+                <label>
+                  Bio
+                  <textarea name="bio" rows="4" placeholder="Tell colleagues a bit about yourself"></textarea>
+                </label>
+                <p id="profile-message" class="form-message" hidden></p>
+                <button type="submit" class="btn btn-primary">Save profile</button>
+              </form>
+            </div>
+          </section>
+
+          <section id="panel-member" class="app-panel" hidden>
+            <button type="button" id="member-back-btn" class="link-btn back-link">← Back to directory</button>
+            <div id="member-profile" class="member-profile-wrap"></div>
+          </section>
+        </main>
+      </section>
+    </div>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

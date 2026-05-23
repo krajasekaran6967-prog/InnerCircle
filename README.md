@@ -1,38 +1,57 @@
 # InnerCircle
 
-InnerCircle is a social media web application designed specifically for employees to improve collaboration, raise morale, and build a sense of community within a company.
+Employee social platform for team cooperation and community building.
 
-## Purpose
-The goal of InnerCircle is to create a platform where employees can connect, communicate, and collaborate effectively. By fostering a sense of community, the app aims to improve teamwork and overall workplace satisfaction.
+## Quick start
 
----
+```bash
+npm install
+npm start
+```
 
-## Features
-- **User Authentication**:
-  - Secure signup, login, and logout functionality.
-  - Session control to maintain user authentication across pages.
-- **User Profiles**:
-  - Employees can create personalized profiles with uploaded profile pictures.
-- **Member Directory**:
-  - A searchable list of all registered employees for easy identification and connection.
-- **Social Features**:
-  - Add colleagues as friends to stay connected.
-  - Public and private messaging, including 1:1 chats and group conversations.
-- **Responsive Design**:
-  - Optimized for both desktop and mobile platforms.
-- **Professional Styling**:
-  - Minimalistic and professional CSS styling.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+For development with auto-restart:
 
-## Folder Structure
-InnerCircle/
-├── frontend/                 # Contains client-side code
-│   ├── index.html            # Main HTML file
-│   ├── style.css             # CSS for styling
-│   └── app.js                # JavaScript for frontend logic
-├── backend/                  # Contains server-side code
-│   └── server.js             # Express.js server
-├── team_agreement.md         # Team agreement and brainstorming notes
-├── README.md                 # Project overview
-└── .gitignore                # Files to ignore in Git
+```bash
+npm run dev
+```
+
+## Project structure
+
+```
+frontend/     HTML, CSS, vanilla JavaScript (client)
+backend/      Node.js + Express (API, sessions)
+docs/         Development plan and team docs
+```
+
+## Current features (Phase 0–2)
+
+- User signup, login, logout, and session persistence
+- Member directory with search (name, department, email)
+- User profiles: edit name, department, bio
+- Profile photo upload (JPEG, PNG, GIF, WebP, max 2MB)
+- View other members’ profiles from the directory
+
+## API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/signup` | Create account |
+| POST | `/api/auth/login` | Sign in |
+| POST | `/api/auth/logout` | Sign out |
+| GET | `/api/auth/me` | Current user |
+| GET | `/api/users?search=` | Member directory (optional search) |
+| GET | `/api/users/me` | Current user profile |
+| PUT | `/api/users/me` | Update profile |
+| POST | `/api/users/me/avatar` | Upload profile photo (`multipart/form-data`, field `avatar`) |
+| GET | `/api/users/:id` | View a member’s profile |
+
+## Team
+
+- Kishore Prasanth Rajasekaran
+- Sivmeng Oeng
+- Krishnamoorthy Ramanath
+- Xin Rao
+
+See [docs/project.md](docs/project.md) for the full project description, plan, and code summary.
