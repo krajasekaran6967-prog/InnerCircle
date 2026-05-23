@@ -4,6 +4,31 @@ const crypto = require("crypto");
 
 const DATA_DIR = path.join(__dirname);
 const USERS_FILE = path.join(DATA_DIR, "users.json");
+const LOCK_FILE = path.join(DATA_DIR, ".users.lock");
+
+function acquireLock() {
+  const start = Date.now();
+  while (fs.existsSync(LOCK_FILE)) {
+    if (Date.now() - start > 5000) {
+      throw new Error("Timeout waiting for lock");
+    }
+    fs.unlinkSync(LOCK_FILE);
+  }
+  fs.writeFileSync(LOCK_FILE, String(process.pid));
+}
+
+function releaseLock() {
+  try {
+    if (fs.existsSync(LOCK_FILE)) {
+      const pid = fs.readFileSync(LOCK_FILE, "utf8");
+      if (pid === String(process.pid)) {
+        fs.unlinkSync(LOCK_FILE);
+      }
+    }
+  } catch {
+    // Ignore errors
+  }
+}
 
 function readUsers() {
   if (!fs.existsSync(USERS_FILE)) {
@@ -36,47 +61,57 @@ function findUserById(id) {
 }
 
 function createUser({ email, passwordHash, name, department }) {
-  const users = readUsers();
-  const user = {
-    id: createId(),
-    email: email.trim().toLowerCase(),
-    passwordHash,
-    name: name.trim(),
-    department: department.trim(),
-    bio: "",
-    thumbnailUrl: "",
-    createdAt: new Date().toISOString(),
-  };
+  acquireLock();
+  try {
+    const users = readUsers();
+    const user = {
+      id: createId(),
+      email: email.trim().toLowerCase(),
+      passwordHash,
+      name: name.trim(),
+      department: department.trim(),
+      bio: "",
+      thumbnailUrl: "",
+      createdAt: new Date().toISOString(),
+    };
 
-  users.push(user);
-  writeUsers(users);
-  return user;
+    users.push(user);
+    writeUsers(users);
+    return user;
+  } finally {
+    releaseLock();
+  }
 }
 
 function updateUser(id, updates) {
-  const users = readUsers();
-  const index = users.findIndex((user) => user.id === id);
-  if (index === -1) {
-    return null;
-  }
+  acquireLock();
+  try {
+    const users = readUsers();
+    const index = users.findIndex((user) => user.id === id);
+    if (index === -1) {
+      return null;
+    }
 
-  const user = users[index];
-  if (updates.name !== undefined) {
-    user.name = String(updates.name).trim();
-  }
-  if (updates.department !== undefined) {
-    user.department = String(updates.department).trim();
-  }
-  if (updates.bio !== undefined) {
-    user.bio = String(updates.bio).trim();
-  }
-  if (updates.thumbnailUrl !== undefined) {
-    user.thumbnailUrl = updates.thumbnailUrl;
-  }
+    const user = users[index];
+    if (updates.name !== undefined) {
+      user.name = String(updates.name).trim();
+    }
+    if (updates.department !== undefined) {
+      user.department = String(updates.department).trim();
+    }
+    if (updates.bio !== undefined) {
+      user.bio = String(updates.bio).trim();
+    }
+    if (updates.thumbnailUrl !== undefined) {
+      user.thumbnailUrl = updates.thumbnailUrl;
+    }
 
-  users[index] = user;
-  writeUsers(users);
-  return user;
+    users[index] = user;
+    writeUsers(users);
+    return user;
+  } finally {
+    releaseLock();
+  }
 }
 
 function searchUsers(query) {
