@@ -26,3 +26,13 @@ The goal of InnerCircle is to create a platform where employees can connect, com
 ---
 
 ## Folder Structure
+InnerCircle/
+├── frontend/                 # Contains client-side code
+│   ├── index.html            # Main HTML file
+│   ├── style.css             # CSS for styling
+│   └── app.js                # JavaScript for frontend logic
+├── backend/                  # Contains server-side code
+│   └── server.js             # Express.js server
+├── team_agreement.md         # Team agreement and brainstorming notes
+├── README.md                 # Project overview
+└── .gitignore                # Files to ignore in Git
