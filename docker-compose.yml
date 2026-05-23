@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - SESSION_SECRET=innercircle-docker-secret
+    volumes:
+      - uploads:/app/backend/uploads
+      - data:/app/backend/data
+
+volumes:
+  uploads:
+  data:
