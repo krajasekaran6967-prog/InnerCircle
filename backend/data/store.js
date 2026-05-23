@@ -1,221 +1,128 @@
-const fs = require("fs");
-const path = require("path");
 const crypto = require("crypto");
-
-const DATA_DIR = path.join(__dirname);
-const USERS_FILE = path.join(DATA_DIR, "users.json");
-const LOCK_FILE = path.join(DATA_DIR, ".users.lock");
-
-function acquireLock() {
-  const start = Date.now();
-  while (true) {
-    try {
-      const fd = fs.openSync(LOCK_FILE, "wx");
-      fs.writeFileSync(fd, String(process.pid));
-      fs.closeSync(fd);
-      return;
-    } catch (error) {
-      if (error.code !== "EEXIST") {
-        throw error;
-      }
-      if (Date.now() - start > 5000) {
-        throw new Error("Timeout waiting for lock");
-      }
-    }
-  }
-}
-
-function releaseLock() {
-  try {
-    if (fs.existsSync(LOCK_FILE)) {
-      const pid = fs.readFileSync(LOCK_FILE, "utf8");
-      if (pid === String(process.pid)) {
-        fs.unlinkSync(LOCK_FILE);
-      }
-    }
-  } catch {
-    // Ignore errors
-  }
-}
-
-function readUsers() {
-  if (!fs.existsSync(USERS_FILE)) {
-    return [];
-  }
-
-  const raw = fs.readFileSync(USERS_FILE, "utf8");
-  if (!raw.trim()) {
-    return [];
-  }
-
-  return JSON.parse(raw).map((user) => ({
-    ...user,
-    friends: user.friends || [],
-  }));
-}
-
-function writeUsers(users) {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-}
+const db = require("./db");
 
 function createId() {
   return crypto.randomBytes(16).toString("hex");
 }
 
+function rowToUser(row) {
+  if (!row) return null;
+  return {
+    ...row,
+    friends: db
+      .prepare("SELECT friendId FROM friends WHERE userId = ?")
+      .all(row.id)
+      .map((r) => r.friendId),
+  };
+}
+
 function findUserByEmail(email) {
-  const normalized = email.trim().toLowerCase();
-  return readUsers().find((user) => user.email === normalized) || null;
+  return rowToUser(
+    db.prepare("SELECT * FROM users WHERE email = ?").get(email.trim().toLowerCase())
+  );
 }
 
 function findUserById(id) {
-  return readUsers().find((user) => user.id === id) || null;
+  return rowToUser(db.prepare("SELECT * FROM users WHERE id = ?").get(id));
 }
 
 function createUser({ email, passwordHash, name, department }) {
-  acquireLock();
-  try {
-    const users = readUsers();
-    const user = {
-      id: createId(),
-      email: email.trim().toLowerCase(),
-      passwordHash,
-      name: name.trim(),
-      department: department.trim(),
-      bio: "",
-      thumbnailUrl: "",
-      friends: [],
-      createdAt: new Date().toISOString(),
-    };
-
-    users.push(user);
-    writeUsers(users);
-    return user;
-  } finally {
-    releaseLock();
-  }
+  const user = {
+    id: createId(),
+    email: email.trim().toLowerCase(),
+    passwordHash,
+    name: name.trim(),
+    department: department.trim(),
+    bio: "",
+    thumbnailUrl: "",
+    createdAt: new Date().toISOString(),
+  };
+  db.prepare(
+    "INSERT INTO users (id, email, passwordHash, name, department, bio, thumbnailUrl, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ).run(user.id, user.email, user.passwordHash, user.name, user.department, user.bio, user.thumbnailUrl, user.createdAt);
+  return { ...user, friends: [] };
 }
 
 function updateUser(id, updates) {
-  acquireLock();
-  try {
-    const users = readUsers();
-    const index = users.findIndex((user) => user.id === id);
-    if (index === -1) {
-      return null;
+  const allowed = ["name", "department", "bio", "thumbnailUrl"];
+  const fields = [];
+  const values = [];
+  for (const key of allowed) {
+    if (updates[key] !== undefined) {
+      fields.push(`${key} = ?`);
+      values.push(
+        key === "thumbnailUrl" ? updates[key] : String(updates[key]).trim()
+      );
     }
-
-    const user = users[index];
-    if (updates.name !== undefined) {
-      user.name = String(updates.name).trim();
-    }
-    if (updates.department !== undefined) {
-      user.department = String(updates.department).trim();
-    }
-    if (updates.bio !== undefined) {
-      user.bio = String(updates.bio).trim();
-    }
-    if (updates.thumbnailUrl !== undefined) {
-      user.thumbnailUrl = updates.thumbnailUrl;
-    }
-
-    users[index] = user;
-    writeUsers(users);
-    return user;
-  } finally {
-    releaseLock();
   }
+  if (!fields.length) return findUserById(id);
+  values.push(id);
+  db.prepare(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`).run(...values);
+  return findUserById(id);
 }
 
 function searchUsers(query) {
   const normalized = query.trim().toLowerCase();
-  if (!normalized) {
-    return readUsers();
-  }
-
-  return readUsers().filter((user) => {
-    const haystack = [user.name, user.email, user.department, user.bio]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(normalized);
-  });
+  const rows = db.prepare("SELECT * FROM users").all();
+  if (!normalized) return rows.map(rowToUser);
+  return rows
+    .filter((u) =>
+      [u.name, u.email, u.department, u.bio].join(" ").toLowerCase().includes(normalized)
+    )
+    .map(rowToUser);
 }
 
-function listFriends(id) {
-  const users = readUsers();
-  const user = users.find((entry) => entry.id === id);
-  if (!user) {
-    return [];
-  }
-  const friendSet = new Set(user.friends || []);
-  return users.filter((entry) => friendSet.has(entry.id));
+function listFriends(userId) {
+  const friendIds = db
+    .prepare("SELECT friendId FROM friends WHERE userId = ?")
+    .all(userId)
+    .map((r) => r.friendId);
+  return friendIds.map(findUserById).filter(Boolean);
 }
+
+const insertFriend = db.prepare("INSERT OR IGNORE INTO friends (userId, friendId) VALUES (?, ?)");
 
 function addFriend(userId, friendId) {
-  if (userId === friendId) {
-    throw new Error("You cannot add yourself as a friend.");
-  }
-
-  acquireLock();
+  if (userId === friendId) throw new Error("You cannot add yourself as a friend.");
+  db.exec("BEGIN");
   try {
-    const users = readUsers();
-    const userIndex = users.findIndex((entry) => entry.id === userId);
-    const friendIndex = users.findIndex((entry) => entry.id === friendId);
-    if (userIndex === -1 || friendIndex === -1) {
-      return null;
-    }
-
-    users[userIndex].friends = users[userIndex].friends || [];
-    users[friendIndex].friends = users[friendIndex].friends || [];
-
-    if (!users[userIndex].friends.includes(friendId)) {
-      users[userIndex].friends.push(friendId);
-    }
-    if (!users[friendIndex].friends.includes(userId)) {
-      users[friendIndex].friends.push(userId);
-    }
-
-    writeUsers(users);
-    return users[userIndex];
-  } finally {
-    releaseLock();
+    insertFriend.run(userId, friendId);
+    insertFriend.run(friendId, userId);
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
   }
+  return findUserById(userId);
 }
 
 function removeFriend(userId, friendId) {
-  acquireLock();
+  if (!findUserById(friendId)) return null;
+  db.exec("BEGIN");
   try {
-    const users = readUsers();
-    const userIndex = users.findIndex((entry) => entry.id === userId);
-    const friendIndex = users.findIndex((entry) => entry.id === friendId);
-    if (userIndex === -1 || friendIndex === -1) {
-      return null;
-    }
-
-    users[userIndex].friends = (users[userIndex].friends || []).filter((id) => id !== friendId);
-    users[friendIndex].friends = (users[friendIndex].friends || []).filter((id) => id !== userId);
-    writeUsers(users);
-    return users[userIndex];
-  } finally {
-    releaseLock();
+    db.prepare("DELETE FROM friends WHERE userId = ? AND friendId = ?").run(userId, friendId);
+    db.prepare("DELETE FROM friends WHERE userId = ? AND friendId = ?").run(friendId, userId);
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
   }
+  return findUserById(userId);
 }
 
 function toPublicUser(user, viewerId = null) {
-  if (!user) {
-    return null;
-  }
-
-  const { passwordHash, ...publicUser } = user;
-  publicUser.friends = publicUser.friends || [];
-  publicUser.friendCount = publicUser.friends.length;
+  if (!user) return null;
+  const { passwordHash, ...pub } = user;
+  pub.friends = pub.friends || [];
+  pub.friendCount = pub.friends.length;
   if (viewerId) {
-    publicUser.isFriend = publicUser.friends.includes(viewerId);
+    const viewer = db.prepare("SELECT 1 FROM friends WHERE userId = ? AND friendId = ?").get(viewerId, user.id);
+    pub.isFriend = !!viewer;
   }
-  return publicUser;
+  return pub;
 }
 
 module.exports = {
-  readUsers,
   findUserByEmail,
   findUserById,
   createUser,

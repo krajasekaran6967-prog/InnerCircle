@@ -20,12 +20,12 @@ router.post("/signup", async (req, res) => {
     return res.status(400).json({ error: "Password must be at least 8 characters." });
   }
 
-  if (findUserByEmail(email)) {
+  if (await findUserByEmail(email)) {
     return res.status(409).json({ error: "An account with this email already exists." });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
-  const user = createUser({ email, passwordHash, name, department });
+  const user = await createUser({ email, passwordHash, name, department });
 
   req.session.userId = user.id;
 
@@ -39,7 +39,7 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user) {
     return res.status(401).json({ error: "Invalid email or password." });
   }
@@ -65,12 +65,12 @@ router.post("/logout", (req, res) => {
   });
 });
 
-router.get("/me", (req, res) => {
+router.get("/me", async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: "Not authenticated." });
   }
 
-  const user = findUserById(req.session.userId);
+  const user = await findUserById(req.session.userId);
   if (!user) {
     req.session.destroy(() => {});
     return res.status(401).json({ error: "Not authenticated." });
