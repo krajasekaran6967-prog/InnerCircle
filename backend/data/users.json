@@ -1,0 +1,22 @@
+[
+  {
+    "id": "0de7d2d066378cc71ebb479af6e4e890",
+    "email": "test@company.com",
+    "passwordHash": "$2a$10$wgzvEM7FAvy9m.xU0mt6KuKzoP2.TxdcJtaKb1yKctIvtOzu93y3u",
+    "name": "Test User",
+    "department": "Product",
+    "bio": "Building InnerCircle",
+    "thumbnailUrl": "/uploads/0de7d2d066378cc71ebb479af6e4e890-1779501650567-c7290a57.png",
+    "createdAt": "2026-05-23T01:54:19.535Z"
+  },
+  {
+    "id": "3bfb1fbddc203ac441da32e652a2450c",
+    "email": "x.rao.6998@westcliff.edu",
+    "passwordHash": "$2a$10$fqC.SpjfLacntbsxebPRCuGSlqGXE2qlEP465yAcGyBbmYQpWvmge",
+    "name": "Xin",
+    "department": "Computer Science",
+    "bio": "",
+    "thumbnailUrl": "",
+    "createdAt": "2026-05-23T01:55:44.814Z"
+  }
+]
