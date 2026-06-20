@@ -28,6 +28,9 @@ router.post("/public", requireAuth, async (req, res) => {
   if (!text) {
     return res.status(400).json({ error: "Message text is required." });
   }
+  if (text.length > 500) {
+    return res.status(400).json({ error: "Message must be 500 characters or fewer." });
+  }
 
   const message = await createPublicMessage(req.session.userId, text);
   return res.status(201).json({ message: await hydrateMessage(message) });

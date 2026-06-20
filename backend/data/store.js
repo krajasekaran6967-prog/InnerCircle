@@ -98,6 +98,8 @@ function addFriend(userId, friendId) {
 
 function removeFriend(userId, friendId) {
   if (!findUserById(friendId)) return null;
+  const isFriend = db.prepare("SELECT 1 FROM friends WHERE userId = ? AND friendId = ?").get(userId, friendId);
+  if (!isFriend) return null;
   db.exec("BEGIN");
   try {
     db.prepare("DELETE FROM friends WHERE userId = ? AND friendId = ?").run(userId, friendId);
