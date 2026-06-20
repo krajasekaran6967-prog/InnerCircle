@@ -75,12 +75,12 @@ InnerCircle/
 ### Phase 2 — Profiles & Member Directory ✅
 - Profile edit, thumbnail upload, searchable directory
 
-### Phase 3 — Friends / Connections
-- Friend requests, accept/decline, friends list
+### Phase 3 — Friends / Connections ✅
+- Friend requests, accept/decline, friends list, remove connection
 
-### Phase 4 — Messaging
+### Phase 4 — Messaging ✅
 - 4a: 1:1 direct messages
-- 4b: Group chats (public and private)
+- 4b: Group chats with member selection and live polling
 
 ### Phase 5 — Polish & QA
 - Responsive polish, accessibility, peer review, demo prep

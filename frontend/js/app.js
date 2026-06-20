@@ -1,6 +1,13 @@
 import { getCurrentUser, handleLogin, handleLogout, handleSignup } from "./auth.js";
 import { initDirectory } from "./directory.js";
 import { initProfile, initMemberView } from "./profile.js";
+import { initFriends } from "./friends.js";
+import { initMessages } from "./messages.js";
+import { initHeroCanvas } from "./canvas-bg.js";
+import { initEffects, burstAt } from "./effects.js";
+
+initHeroCanvas(document.getElementById("hero-canvas"));
+initEffects(document.getElementById("fx-canvas"));
 
 const views = {
   landing: document.getElementById("view-landing"),
@@ -12,6 +19,8 @@ const views = {
 const panels = {
   home: document.getElementById("panel-home"),
   directory: document.getElementById("panel-directory"),
+  friends: document.getElementById("panel-friends"),
+  messages: document.getElementById("panel-messages"),
   profile: document.getElementById("panel-profile"),
   member: document.getElementById("panel-member"),
 };
@@ -39,16 +48,6 @@ const avatarInput = document.getElementById("avatar-input");
 let currentUser = null;
 let activePanel = "home";
 
-const directory = initDirectory({
-  listEl: directoryList,
-  searchEl: directorySearch,
-  emptyEl: directoryEmpty,
-  onViewMember: (userId) => {
-    showPanel("member");
-    memberView.showMember(userId);
-  },
-});
-
 const profile = initProfile({
   formEl: profileForm,
   messageEl: profileMessage,
@@ -60,11 +59,63 @@ const profile = initProfile({
   },
 });
 
+const messagesModule = initMessages({
+  conversationListEl: document.getElementById("conversation-list"),
+  conversationEmptyEl: document.getElementById("conversation-empty"),
+  threadEl: document.getElementById("thread"),
+  threadEmptyEl: document.getElementById("thread-empty"),
+  threadTitleEl: document.getElementById("thread-title"),
+  threadSubtitleEl: document.getElementById("thread-subtitle"),
+  threadMessagesEl: document.getElementById("thread-messages"),
+  messageFormEl: document.getElementById("message-form"),
+  messageInputEl: document.getElementById("message-input"),
+  newGroupBtnEl: document.getElementById("new-group-btn"),
+  groupModalEl: document.getElementById("group-modal"),
+  groupFormEl: document.getElementById("group-form"),
+  groupNameEl: document.getElementById("group-name"),
+  groupMembersEl: document.getElementById("group-members"),
+  groupMessageEl: document.getElementById("group-message"),
+  groupCancelEl: document.getElementById("group-cancel"),
+  getFriends: () => (friendsModule ? friendsModule.getFriends() : []),
+});
+
+const friendsModule = initFriends({
+  incomingListEl: document.getElementById("incoming-list"),
+  incomingEmptyEl: document.getElementById("incoming-empty"),
+  incomingCountEl: document.getElementById("incoming-count"),
+  friendsListEl: document.getElementById("friends-list"),
+  friendsEmptyEl: document.getElementById("friends-empty"),
+  outgoingListEl: document.getElementById("outgoing-list"),
+  outgoingEmptyEl: document.getElementById("outgoing-empty"),
+  badgeEl: document.getElementById("friends-badge"),
+  onMessageUser: (userId) => openMessagesWithUser(userId),
+  onChange: () => friendsModule.refreshBadge(),
+});
+
+const directory = initDirectory({
+  listEl: directoryList,
+  searchEl: directorySearch,
+  emptyEl: directoryEmpty,
+  onViewMember: (userId) => {
+    showPanel("member");
+    memberView.showMember(userId);
+  },
+  onMessageUser: (userId) => openMessagesWithUser(userId),
+  onChange: () => friendsModule.refreshBadge(),
+});
+
 const memberView = initMemberView({
   containerEl: memberContainer,
   backBtnEl: memberBackBtn,
   onBack: () => showPanel("directory"),
+  onMessageUser: (userId) => openMessagesWithUser(userId),
+  onChange: () => friendsModule.refreshBadge(),
 });
+
+async function openMessagesWithUser(userId) {
+  showPanel("messages");
+  await messagesModule.openWithUser(userId);
+}
 
 function showView(name) {
   Object.entries(views).forEach(([key, element]) => {
@@ -82,8 +133,20 @@ function showPanel(name) {
     button.classList.toggle("nav-active", button.dataset.panelNav === name);
   });
 
+  if (name !== "messages") {
+    messagesModule.stopPolling();
+  }
+
   if (name === "directory") {
     directory.loadDirectory(directorySearch.value.trim());
+  }
+
+  if (name === "friends") {
+    friendsModule.loadFriends();
+  }
+
+  if (name === "messages") {
+    messagesModule.loadConversations();
   }
 
   if (name === "profile" && currentUser) {
@@ -102,11 +165,13 @@ function setAuthenticatedUser(user) {
   updateHeader(user);
   showView("app");
   showPanel("home");
+  friendsModule.refreshBadge();
 }
 
 function setLoggedOut() {
   currentUser = null;
   directorySearch.value = "";
+  messagesModule.stopPolling();
   showView("landing");
 }
 
@@ -135,7 +200,10 @@ loginForm.addEventListener("submit", (event) => {
 
 signupForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  handleSignup(signupForm, signupMessage, setAuthenticatedUser);
+  handleSignup(signupForm, signupMessage, (user) => {
+    setAuthenticatedUser(user);
+    burstAt(window.innerWidth / 2, window.innerHeight / 3, { count: 60, power: 12 });
+  });
 });
 
 logoutBtn.addEventListener("click", () => {

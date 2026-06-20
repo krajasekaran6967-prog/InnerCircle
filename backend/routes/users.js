@@ -9,12 +9,44 @@ const {
   searchUsers,
   toPublicUser,
 } = require("../data/store");
+const { getFriendshipBetween } = require("../data/friends");
 
 const router = express.Router();
 
+function friendshipFor(currentUserId, otherUserId) {
+  if (currentUserId === otherUserId) {
+    return { status: "self", requestId: null };
+  }
+
+  const record = getFriendshipBetween(currentUserId, otherUserId);
+  if (!record) {
+    return { status: "none", requestId: null };
+  }
+
+  if (record.status === "accepted") {
+    return { status: "friends", requestId: record.id };
+  }
+
+  const status =
+    record.requesterId === currentUserId ? "pending_outgoing" : "pending_incoming";
+  return { status, requestId: record.id };
+}
+
+function withFriendship(currentUserId, user) {
+  const publicUser = toPublicUser(user);
+  if (!publicUser) {
+    return null;
+  }
+  publicUser.friendship = friendshipFor(currentUserId, publicUser.id);
+  return publicUser;
+}
+
 router.get("/", requireAuth, (req, res) => {
   const query = req.query.search || "";
-  const users = searchUsers(query).map((user) => toPublicUser(user));
+  const currentUserId = req.session.userId;
+  const users = searchUsers(query)
+    .filter((user) => user.id !== currentUserId)
+    .map((user) => withFriendship(currentUserId, user));
   return res.json({ users });
 });
 
@@ -76,7 +108,7 @@ router.get("/:id", requireAuth, (req, res) => {
     return res.status(404).json({ error: "User not found." });
   }
 
-  return res.json({ user: toPublicUser(user) });
+  return res.json({ user: withFriendship(req.session.userId, user) });
 });
 
 module.exports = router;

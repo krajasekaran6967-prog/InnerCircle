@@ -9,6 +9,7 @@
   <body>
     <div id="app">
       <section id="view-landing" class="view hero">
+        <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
         <div class="hero-content">
           <div class="logo-mark" aria-hidden="true">IC</div>
           <h1>InnerCircle</h1>
@@ -99,6 +100,10 @@
         <nav class="app-nav" aria-label="Main">
           <button type="button" class="nav-link nav-active" data-panel-nav="home">Home</button>
           <button type="button" class="nav-link" data-panel-nav="directory">Directory</button>
+          <button type="button" class="nav-link" data-panel-nav="friends">
+            Friends<span id="friends-badge" class="nav-badge" hidden>0</span>
+          </button>
+          <button type="button" class="nav-link" data-panel-nav="messages">Messages</button>
           <button type="button" class="nav-link" data-panel-nav="profile">My profile</button>
         </nav>
 
@@ -115,15 +120,25 @@
                 </button>
               </article>
               <article class="card card-action">
+                <h3>Friends</h3>
+                <p class="muted">Connect with colleagues and manage requests.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-goto-panel="friends">
+                  View friends
+                </button>
+              </article>
+              <article class="card card-action">
+                <h3>Messages</h3>
+                <p class="muted">Start 1:1 chats and group conversations.</p>
+                <button type="button" class="btn btn-primary btn-sm" data-goto-panel="messages">
+                  Open messages
+                </button>
+              </article>
+              <article class="card card-action">
                 <h3>Your profile</h3>
                 <p class="muted">Update your photo, bio, and details.</p>
                 <button type="button" class="btn btn-primary btn-sm" data-goto-panel="profile">
                   Edit profile
                 </button>
-              </article>
-              <article class="card">
-                <h3>Messages</h3>
-                <p class="muted">1:1 and group chats. Coming in Phase 4.</p>
               </article>
             </div>
           </section>
@@ -180,9 +195,95 @@
             <button type="button" id="member-back-btn" class="link-btn back-link">← Back to directory</button>
             <div id="member-profile" class="member-profile-wrap"></div>
           </section>
+
+          <section id="panel-friends" class="app-panel" hidden>
+            <h2>Friends</h2>
+            <p class="muted panel-intro">Manage your connections and requests.</p>
+
+            <div class="friends-group">
+              <h3>Requests received <span id="incoming-count" class="count-pill" hidden>0</span></h3>
+              <div id="incoming-list" class="member-list"></div>
+              <p id="incoming-empty" class="muted empty-state" hidden>No pending requests.</p>
+            </div>
+
+            <div class="friends-group">
+              <h3>Your connections</h3>
+              <div id="friends-list" class="member-list"></div>
+              <p id="friends-empty" class="muted empty-state" hidden>
+                You have no connections yet. Add colleagues from the directory.
+              </p>
+            </div>
+
+            <div class="friends-group">
+              <h3>Requests sent</h3>
+              <div id="outgoing-list" class="member-list"></div>
+              <p id="outgoing-empty" class="muted empty-state" hidden>No sent requests.</p>
+            </div>
+          </section>
+
+          <section id="panel-messages" class="app-panel" hidden>
+            <h2>Messages</h2>
+            <p class="muted panel-intro">Your 1:1 and group conversations.</p>
+
+            <div class="messages-layout">
+              <div class="conversation-pane">
+                <button type="button" id="new-group-btn" class="btn btn-secondary btn-sm btn-full">
+                  + New group chat
+                </button>
+                <div id="conversation-list" class="conversation-list"></div>
+                <p id="conversation-empty" class="muted empty-state" hidden>
+                  No conversations yet. Start one from a member's profile.
+                </p>
+              </div>
+
+              <div class="thread-pane">
+                <div id="thread-empty" class="thread-empty muted">
+                  Select a conversation to start chatting.
+                </div>
+                <div id="thread" class="thread" hidden>
+                  <header class="thread-header">
+                    <h3 id="thread-title"></h3>
+                    <p id="thread-subtitle" class="muted"></p>
+                  </header>
+                  <div id="thread-messages" class="thread-messages"></div>
+                  <form id="message-form" class="message-form">
+                    <input
+                      type="text"
+                      id="message-input"
+                      placeholder="Write a message…"
+                      autocomplete="off"
+                      required
+                    />
+                    <button type="submit" class="btn btn-primary btn-sm">Send</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </section>
         </main>
+
+        <div id="group-modal" class="modal" hidden>
+          <div class="modal-card">
+            <h3>New group chat</h3>
+            <form id="group-form" class="form">
+              <label>
+                Group name
+                <input type="text" id="group-name" required placeholder="e.g. Marketing Team" />
+              </label>
+              <p class="muted">Choose members from your connections:</p>
+              <div id="group-members" class="group-members"></div>
+              <p id="group-message" class="form-message" hidden></p>
+              <div class="modal-actions">
+                <button type="button" id="group-cancel" class="btn btn-secondary btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Create group</button>
+              </div>
+            </form>
+          </div>
+        </div>
       </section>
     </div>
+
+    <canvas id="fx-canvas" class="fx-canvas" aria-hidden="true"></canvas>
 
     <script type="module" src="/js/app.js"></script>
   </body>

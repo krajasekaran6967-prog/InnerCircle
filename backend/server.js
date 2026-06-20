@@ -3,6 +3,8 @@ const path = require("path");
 const session = require("express-session");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/users");
+const friendRoutes = require("./routes/friends");
+const conversationRoutes = require("./routes/conversations");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +27,8 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/friends", friendRoutes);
+app.use("/api/conversations", conversationRoutes);
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use(express.static(path.join(__dirname, "../frontend")));

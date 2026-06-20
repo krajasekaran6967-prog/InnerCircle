@@ -32,8 +32,8 @@ Employees often work in silos across departments. InnerCircle gives them a singl
 | Session control via secure session tokens | ✅ Done |
 | User profiles with uploaded thumbnails | ✅ Done |
 | Member directory of all employees | ✅ Done |
-| Adding members as friends | 🔲 Phase 3 |
-| Public and private messaging (1:1 and group) | 🔲 Phase 4 |
+| Adding members as friends | ✅ Done |
+| Public and private messaging (1:1 and group) | ✅ Done |
 | Professional, minimalistic CSS styling | ✅ Done |
 
 ### Tech Stack
@@ -137,32 +137,33 @@ Employees often work in silos across departments. InnerCircle gives them a singl
 
 ---
 
-#### Phase 3 — Friends / Connections 🔲 Planned
+#### Phase 3 — Friends / Connections ✅ Complete
 
 **Goal:** Employees can connect with colleagues.
 
-- [ ] `POST /api/friends/request` — send friend request
-- [ ] `PUT /api/friends/:id` — accept or decline
-- [ ] `GET /api/friends` — list friends and pending requests
-- [ ] UI: "Add friend" / "Friends" / "Pending" on directory and profiles
-- [ ] Data model: `{ requesterId, recipientId, status }`
+- [x] `POST /api/friends/request` — send friend request
+- [x] `PUT /api/friends/:id` — accept or decline
+- [x] `DELETE /api/friends/:id` — remove a connection
+- [x] `GET /api/friends` — list friends, incoming and outgoing requests
+- [x] UI: "Add friend" / "Requested" / "Accept" on directory and profiles, Friends panel with badge
+- [x] Data model: `{ requesterId, recipientId, status }`
 
 **Deliverable:** Users can build and manage a friends list.
 
 ---
 
-#### Phase 4 — Messaging 🔲 Planned
+#### Phase 4 — Messaging ✅ Complete
 
-**Goal:** 1:1 and group conversations (public and private).
+**Goal:** 1:1 and group conversations.
 
 **4a — Direct messages**
-- [ ] Conversation list and message threads
-- [ ] Send and receive 1:1 messages
-- [ ] Polling for new messages (WebSockets optional stretch goal)
+- [x] Conversation list and message threads
+- [x] Send and receive 1:1 messages
+- [x] Polling for new messages (4s interval while a thread is open)
 
 **4b — Group chats**
-- [ ] Create public or private groups
-- [ ] Invite members and group messaging UI
+- [x] Create groups with a name and selected connections
+- [x] Group messaging UI and add-members endpoint
 
 **Deliverable:** Working direct and group messaging.
 

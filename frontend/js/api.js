@@ -56,4 +56,46 @@ export const api = {
     formData.append("avatar", file);
     return request("/users/me/avatar", { method: "POST", body: formData });
   },
+  getFriends() {
+    return request("/friends");
+  },
+  sendFriendRequest(recipientId) {
+    return request("/friends/request", {
+      method: "POST",
+      body: JSON.stringify({ recipientId }),
+    });
+  },
+  respondToRequest(requestId, action) {
+    return request(`/friends/${requestId}`, {
+      method: "PUT",
+      body: JSON.stringify({ action }),
+    });
+  },
+  removeFriend(requestId) {
+    return request(`/friends/${requestId}`, { method: "DELETE" });
+  },
+  getConversations() {
+    return request("/conversations");
+  },
+  startDirectConversation(recipientId) {
+    return request("/conversations", {
+      method: "POST",
+      body: JSON.stringify({ recipientId }),
+    });
+  },
+  createGroupConversation(name, memberIds) {
+    return request("/conversations", {
+      method: "POST",
+      body: JSON.stringify({ name, memberIds }),
+    });
+  },
+  getMessages(conversationId) {
+    return request(`/conversations/${conversationId}/messages`);
+  },
+  sendMessage(conversationId, body) {
+    return request(`/conversations/${conversationId}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
+  },
 };

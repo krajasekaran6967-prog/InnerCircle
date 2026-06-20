@@ -25,13 +25,15 @@ backend/      Node.js + Express (API, sessions)
 docs/         Development plan and team docs
 ```
 
-## Current features (Phase 0–2)
+## Current features (Phase 0–4)
 
 - User signup, login, logout, and session persistence
 - Member directory with search (name, department, email)
 - User profiles: edit name, department, bio
 - Profile photo upload (JPEG, PNG, GIF, WebP, max 2MB)
 - View other members’ profiles from the directory
+- Friends / connections: send requests, accept or decline, remove connections
+- Messaging: 1:1 direct messages and group chats with live polling
 
 ## API
 
@@ -46,6 +48,15 @@ docs/         Development plan and team docs
 | PUT | `/api/users/me` | Update profile |
 | POST | `/api/users/me/avatar` | Upload profile photo (`multipart/form-data`, field `avatar`) |
 | GET | `/api/users/:id` | View a member’s profile |
+| GET | `/api/friends` | Friends, incoming and outgoing requests |
+| POST | `/api/friends/request` | Send a friend request (`recipientId`) |
+| PUT | `/api/friends/:id` | Accept or decline a request (`action`) |
+| DELETE | `/api/friends/:id` | Remove a connection |
+| GET | `/api/conversations` | List your conversations |
+| POST | `/api/conversations` | Start a direct chat (`recipientId`) or group (`name`, `memberIds`) |
+| GET | `/api/conversations/:id/messages` | Messages in a conversation |
+| POST | `/api/conversations/:id/messages` | Send a message (`body`) |
+| POST | `/api/conversations/:id/members` | Add members to a group (`memberIds`) |
 
 ## Team
 
