@@ -1,114 +1,124 @@
-# InnerCircle — Screencast Script
+# Week 7 Refined App — Screencast Script
 
-**Target length:** 3–5 minutes  
-**Tone:** Conversational, confident, demo-style  
-**Setup before recording:** GitHub repo open in browser, app running at `http://localhost:3000` in another tab, one test account ready (e.g., Alice in Engineering)
+**Duration:** 5:30–6:30 minutes
 
 ---
 
-## [0:00 – 0:15] Introduction
+## Intro (0:00–0:30)
 
-> "Hi everyone. In this walkthrough I'll show you InnerCircle — an employee social platform built with HTML, CSS, and JavaScript. Let's start by looking at the project on GitHub."
+> "Hi, I'm [name] from team InnerCircle. This is our Week 7 refined app video. InnerCircle is an employee social platform for team cooperation and community building. In this video I'll walk you through the app and the key improvements we made based on our usability testing feedback."
 
-*Screen: GitHub repo page*
-
----
-
-## [0:15 – 0:45] Repository Overview
-
-> "Here's our repository. You can see the project structure — we have a `frontend` folder for all our HTML, CSS, and JavaScript, and a `docs` folder with our project plan and documentation."
-
-*Point to the file tree: `frontend/`, `docs/`*
-
-> "The README gives a quick overview of the app and lists the current features and the team members who contributed."
-
-*Scroll the README just far enough to show the project title, the Current Features list, and the Team section — stop before any backend or security sections*
+*Show the GitHub repo — briefly show the PR and the phase-2 branch.*
 
 ---
 
-## [0:45 – 1:15] Project Structure in the Repo
+## What we changed based on usability testing (0:30–1:15)
 
-> "Back in the file tree — inside `frontend/js` you can see our JavaScript is split into modules: `app.js` for routing and navigation, `auth.js` for login and signup, `directory.js` for the member list, and `profile.js` for profile editing. `style.css` handles all the layout and responsive design."
+> "Our usability testing revealed three main issues. First, navigation was unclear — users didn't know where they were in the app. Second, the messages screen was too cramped on mobile with two panels side by side. Third, error messages disappeared too quickly or were hard to notice."
 
-*Click into `frontend/js/` to show the files, then click `frontend/style.css`*
-
-> "Everything is plain HTML, CSS, and JavaScript — no frameworks. Now let's see it running in the browser."
+> "Here's what we did to fix each one."
 
 ---
 
-## [1:30 – 2:10] Sign Up
+## Demo: Navigation (1:15–2:00)
 
-*Switch to browser tab with the app at `http://localhost:3000`*
+*Open the app at localhost:3000. Show the landing screen.*
 
-> "When you first arrive you see the landing page. Let's create a new account — I'll click **Sign Up**."
+> "We replaced the top navigation bar with a fixed bottom navigation bar. It stays visible at all times, shows icons and labels for Home, Directory, Messages, and Profile, and highlights the active tab so users always know where they are."
 
-*Click Sign Up → signup form appears*
+*Click through each tab — Home, Directory, Messages, Profile. Point out the active highlight.*
 
-> "The form asks for a name, email, department, and password, with validation before submission."
+> "We also use localStorage to remember your last active tab — so if you refresh the page, you land right back where you were."
 
-*Type: Name = `Alice Chen`, Email = `alice@company.com`, Department = `Engineering`, Password = `secret123`*
-
-> "I'll hit **Create Account** — and we're in. The app remembers the session, so I stay logged in even after a page refresh."
-
-*Click Create Account → app shell loads*
+*Refresh the page and show it returns to the same tab.*
 
 ---
 
-## [2:10 – 2:45] Member Directory & Search
+## Demo: Sign up and profile (2:00–2:45)
 
-*Click **Directory** tab*
+*Click Create Account, fill in the form.*
 
-> "The Directory lists every employee. Each card shows their name, department, and profile photo — or initials as a placeholder. Search filters live as you type."
+> "Signup and login are unchanged in functionality. Once logged in you land on the Home screen with quick links to all sections."
 
-*Type `marketing` → cards filter; clear, type `Bob` → Bob's card appears*
+*Go to Profile tab.*
 
-> "Clicking **View Profile** opens a read-only profile for that member — name, department, bio, and photo."
+> "Users can update their name, department, and bio, and upload a profile photo. When you save, a toast notification confirms the action — that was one of our usability fixes. Instead of inline error text that was easy to miss, every action now shows a brief toast at the bottom of the screen."
 
-*Click View Profile on Bob's card*
-
----
-
-## [2:45 – 3:30] My Profile — Edit & Photo Upload
-
-*Click **My Profile** tab*
-
-> "My Profile lets me update my own information. I'll update the bio and save."
-
-*Type a bio → click Save Changes → success message appears*
-
-> "Now I'll upload a profile photo."
-
-*Click Choose File → select an image → avatar updates in the card*
-
-> "The photo updates immediately here and in the directory. The layout is also fully responsive — let me resize the window to show that."
-
-*Resize browser window narrower → layout adapts*
+*Save the profile and show the toast.*
 
 ---
 
-## [3:30 – 4:00] Login & Logout
+## Demo: Directory and friends (2:45–3:30)
 
-*Click **Logout***
+*Go to the Directory tab.*
 
-> "Logging out clears the session and returns me to the landing page. Protected pages redirect back here if you're not signed in. Let me log back in."
+> "The member directory has live search — results filter as you type with no submit button needed."
 
-*Click Log In → enter credentials → Sign In*
+*Type a name in the search box.*
 
-> "Session restored, all my data is exactly as I left it."
+> "Click View Profile on any member to see their details and add them as a friend."
 
----
-
-## [4:00 – 4:20] Wrap-up
-
-> "That's InnerCircle at Week 3 — a working signup and login flow, a searchable member directory, editable profiles with photo upload, and a responsive layout, all built with HTML, CSS, and vanilla JavaScript. In future weeks we'll be adding messaging and more social features as we cover additional technologies. Thanks for watching."
-
-*Screen: Directory panel showing member cards*
+*Click View Profile, click Add Friend, show the toast confirmation.*
 
 ---
 
-## Recording Tips
+## Demo: Messages — tabbed layout (3:30–4:30)
 
-- Use a browser window at **1280 × 720** or larger for clarity.
-- Slow your mouse movements slightly — viewers need time to follow.
-- Pause 1–2 seconds after each click before narrating the result.
-- Keep the terminal hidden during the recording.
+*Go to Messages tab.*
+
+> "This was our biggest UI improvement. Previously, Public Chat and Direct Messages appeared side by side, which was unreadable on a phone. We redesigned it as a tabbed layout."
+
+*Click the Public Chat tab.*
+
+> "Public Chat is the default. All employees can see and send messages here. The app polls for new messages automatically every 15 seconds — you don't need to refresh."
+
+*Send a public message, show the toast.*
+
+*Click the Direct tab.*
+
+> "The Direct tab shows a friend selector and your message history with that person. The send input is sticky at the bottom so it stays accessible even on a small screen."
+
+*Select a friend, send a direct message.*
+
+---
+
+## Demo: Mobile design (4:30–5:15)
+
+*Open browser DevTools, switch to a mobile viewport (e.g. iPhone 12).*
+
+> "All of our improvements were mobile-first. Every button is at least 44 pixels tall — Apple and Google's minimum tap target guideline. On small screens, member cards stack vertically and the send button goes full width so it's easy to tap with your thumb."
+
+*Show the bottom nav, tap through tabs on mobile viewport.*
+
+> "We also added ARIA roles to the navigation so screen readers announce which tab is active."
+
+---
+
+## Tests and code quality (5:15–5:45)
+
+*Switch to the terminal.*
+
+> "On the code side, we migrated from vanilla JavaScript to React, which was a big architectural improvement. State that's shared across screens — like the current user — lives at the top-level App component and flows down as props. Each screen manages its own local state."
+
+*Run `npm test` — show 48 passing.*
+
+> "We have 48 backend tests covering auth, profiles, friends, and messaging. We also added a Vitest frontend test suite with 17 tests for our React components and screens."
+
+*Run `cd frontend && npm test` — show 17 passing.*
+
+---
+
+## Closing (5:45–6:15)
+
+> "To summarize, the three main improvements from usability testing were: a fixed bottom navigation bar so users always know where they are, a tabbed Messages screen that works on mobile, and toast notifications for every action so feedback is never missed."
+
+> "The app is live on GitHub at the link in the submission. Thanks for watching."
+
+---
+
+## Recording tips
+
+- Use a window size of 1280×800 so text is readable
+- Mute notifications before recording
+- Keep DevTools closed except during the mobile demo section
+- Run `cd frontend && npm run build && cd .. && npm start` before recording so there's no Vite toolbar visible
