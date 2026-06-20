@@ -1,6 +1,6 @@
 # InnerCircle — Project Documentation
 
-Complete overview of the InnerCircle employee social platform: description, development plan, and code summary.
+Complete overview of the InnerCircle employee social platform: description, architecture, and code summary.
 
 ---
 
@@ -10,17 +10,17 @@ Complete overview of the InnerCircle employee social platform: description, deve
 
 **InnerCircle** is a social media web application dedicated to employees. Its purpose is to improve cooperation between teams, raise morale, and build a sense of community within a company.
 
-The app uses a **light architecture** optimized for both laptops and mobile devices, with a professional, minimalistic design suitable for a startup-style internal platform.
+The app uses a **React + Node.js architecture** optimized for mobile and desktop, with a professional minimalistic design and a fixed bottom navigation bar for mobile-friendly use.
 
 ### Problem Statement
 
-Employees often work in silos across departments. InnerCircle gives them a single place to discover colleagues, maintain profiles, and (in later phases) connect and communicate — strengthening cross-team relationships and company culture.
+Employees often work in silos across departments. InnerCircle gives them a single place to discover colleagues, maintain profiles, connect as friends, and communicate — strengthening cross-team relationships and company culture.
 
 ### Target Users
 
-- New and existing employees who need to register and maintain a profile
-- Staff looking to find colleagues across departments
-- Teams building internal community and collaboration
+- New and existing employees registering and maintaining a profile
+- Staff looking to find and connect with colleagues across departments
+- Teams building internal community through messaging and collaboration
 
 ### Core Requirements
 
@@ -32,22 +32,26 @@ Employees often work in silos across departments. InnerCircle gives them a singl
 | Session control via secure session tokens | ✅ Done |
 | User profiles with uploaded thumbnails | ✅ Done |
 | Member directory of all employees | ✅ Done |
-| Adding members as friends | ✅ Done |
-| Public and private messaging (1:1 and group) | ✅ Done |
-| Professional, minimalistic CSS styling | ✅ Done |
+| Adding and removing friends | ✅ Done |
+| Public chat with auto-poll | ✅ Done |
+| Direct messages between friends | ✅ Done |
+| Mobile-first responsive UI | ✅ Done |
+| React component architecture | ✅ Done |
+| Automated tests (backend + frontend) | ✅ Done |
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Markup | HTML5 |
+| Markup | HTML5 (semantic elements) |
 | Styling | CSS3 (custom properties, Flexbox, Grid) |
-| Client logic | Vanilla JavaScript (ES modules) |
+| Client | React 18 + Vite |
 | Server | Node.js + Express |
 | Authentication | `bcryptjs` + `express-session` |
 | File uploads | `multer` |
-| Data storage | JSON file store (`backend/data/users.json`) |
-| Profile images | `backend/uploads/` |
+| Data storage | SQLite (via `better-sqlite3`) |
+| Frontend tests | Vitest + React Testing Library |
+| Backend tests | Node.js built-in `node:test` |
 
 ### Team
 
@@ -58,142 +62,87 @@ Employees often work in silos across departments. InnerCircle gives them a singl
 | Krishnamoorthy Ramanath | Profiles, uploads, directory |
 | Xin Rao | Messaging, chat UI, testing & docs |
 
-### Team Process
-
-- **Clear task allocation** with deadlines at weekly meetings
-- **Weekly check-ins** for progress updates and bottleneck resolution
-- **Transparent communication** when deadlines may slip
-- **Peer review** required before code or design is finalized
-- **Missed deadline policy** with support first, then role adjustment if needed
-
 ---
 
-## 2. Project Plan
-
-### Architecture
+## 2. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Browser (Client)                      │
-│  index.html · style.css · JS modules (app, auth, etc.)  │
+│              Browser (React SPA)                         │
+│  App.jsx · screens/ · components/ · api.js               │
+│  Built by Vite → dist/ (production) or :5173 (dev)       │
 └──────────────────────────┬──────────────────────────────┘
                            │ fetch API (credentials: include)
                            ▼
 ┌─────────────────────────────────────────────────────────┐
-│              Express Server (backend/server.js)          │
-│  /api/auth  ·  /api/users  ·  /uploads  ·  static files │
+│              Express Server (:3000)                      │
+│  /api/auth  ·  /api/users  ·  /api/messages             │
+│  /uploads   ·  static frontend/dist/                    │
 └──────────────────────────┬──────────────────────────────┘
                            │
               ┌────────────┴────────────┐
               ▼                         ▼
-     backend/data/users.json    backend/uploads/
-     (user records)             (profile photos)
+     SQLite (innercircle.db)    backend/uploads/
+     users, friends, messages   (profile photos)
 ```
 
-### Development Phases
+### Component Design (from class activity)
 
-#### Phase 0 — Foundation ✅ Complete
+| Component | Props | State |
+|-----------|-------|-------|
+| `App` | — | `currentUser`, `activePage` (app-level) |
+| `NavBar` | `activePage`, `onNavigate` | — |
+| `Avatar` | `user`, `size` | — |
+| `Toast` | `message`, `type` | — |
+| `MessageItem` | `message` | — |
+| `InlineForm` | `onSubmit`, `placeholder` | local input |
+| `HomeScreen` | `currentUser`, `onNavigate` | — |
+| `DirectoryScreen` | `onViewMember` | `members`, `search` |
+| `ProfileScreen` | `currentUser`, `onProfileUpdated`, `onToast` | `form` |
+| `MessagesScreen` | `initialTab`, `initialFriendId`, `onToast` | `publicMessages`, `directMessages`, `friends` |
+| `MemberScreen` | `userId`, `onBack`, `onMessage`, `onToast` | `member` |
 
-**Goal:** Runnable project skeleton and shared conventions.
-
-- [x] Node.js project setup (`package.json`, dependencies)
-- [x] Express server serving frontend static files
-- [x] Brand CSS variables, responsive layout
-- [x] Git workflow and project folder structure
-- [x] README and documentation
-
-**Deliverable:** Server runs locally; team can clone and develop.
-
----
-
-#### Phase 1 — Authentication & Sessions ✅ Complete
-
-**Goal:** Secure signup, login, logout, and persistent sessions.
-
-- [x] `POST /api/auth/signup` — register with name, email, department, password
-- [x] `POST /api/auth/login` — authenticate and create session
-- [x] `POST /api/auth/logout` — destroy session
-- [x] `GET /api/auth/me` — return current logged-in user
-- [x] HTTP-only session cookie (`innercircle.sid`)
-- [x] Frontend landing, login, and signup views
-- [x] Route guard: unauthenticated users see public pages only
-
-**Deliverable:** Users can register, stay logged in across refreshes, and log out.
+State lives at app-level (`currentUser`, `activePage`) when multiple screens need it. Screen-specific data (messages, search) stays local. Data flows down via props; actions flow up via callbacks.
 
 ---
 
-#### Phase 2 — Profiles & Member Directory ✅ Complete
+## 3. Running the Project
 
-**Goal:** Personalized profiles and colleague discovery.
+### Production
 
-- [x] `PUT /api/users/me` — update name, department, bio
-- [x] `POST /api/users/me/avatar` — upload profile photo (max 2MB)
-- [x] `GET /api/users?search=` — searchable member directory
-- [x] `GET /api/users/:id` — view another member's profile
-- [x] Frontend: Directory, My Profile, and member profile views
-- [x] Debounced search by name, department, or email
-
-**Deliverable:** Every employee has a profile with optional photo; directory lists and searches all members.
-
----
-
-#### Phase 3 — Friends / Connections ✅ Complete
-
-**Goal:** Employees can connect with colleagues.
-
-- [x] `POST /api/friends/request` — send friend request
-- [x] `PUT /api/friends/:id` — accept or decline
-- [x] `DELETE /api/friends/:id` — remove a connection
-- [x] `GET /api/friends` — list friends, incoming and outgoing requests
-- [x] UI: "Add friend" / "Requested" / "Accept" on directory and profiles, Friends panel with badge
-- [x] Data model: `{ requesterId, recipientId, status }`
-
-**Deliverable:** Users can build and manage a friends list.
-
----
-
-#### Phase 4 — Messaging ✅ Complete
-
-**Goal:** 1:1 and group conversations.
-
-**4a — Direct messages**
-- [x] Conversation list and message threads
-- [x] Send and receive 1:1 messages
-- [x] Polling for new messages (4s interval while a thread is open)
-
-**4b — Group chats**
-- [x] Create groups with a name and selected connections
-- [x] Group messaging UI and add-members endpoint
-
-**Deliverable:** Working direct and group messaging.
-
----
-
-#### Phase 5 — Polish & QA 🔲 Planned
-
-**Goal:** Production-quality experience on laptop and mobile.
-
-- [ ] Accessibility pass (labels, keyboard nav, contrast)
-- [ ] Empty and loading states across all views
-- [ ] End-to-end manual test script
-- [ ] Peer review on all features
-- [ ] Demo preparation
-
-**Deliverable:** Demo-ready application.
-
----
-
-### Build Order (Critical Path)
-
-```
-Foundation → Auth/Sessions → Profiles + Directory → Friends → 1:1 Messages → Groups → Polish
+```bash
+cd frontend && npm run build && cd ..
+npm install
+npm start
 ```
 
-Auth blocks all authenticated features. Directory and profiles unblock friends and messaging.
+Open [http://localhost:3000](http://localhost:3000).
 
-### API Reference
+### Development (hot reload)
 
-#### Implemented
+```bash
+# Terminal 1 — backend
+npm run dev
+
+# Terminal 2 — Vite dev server
+cd frontend && npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+### Tests
+
+```bash
+# Backend (48 tests)
+npm test
+
+# Frontend (17 tests)
+cd frontend && npm test
+```
+
+---
+
+## 4. API Reference
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|------|-------------|
@@ -201,219 +150,173 @@ Auth blocks all authenticated features. Directory and profiles unblock friends a
 | POST | `/api/auth/login` | No | Sign in |
 | POST | `/api/auth/logout` | Yes | Sign out |
 | GET | `/api/auth/me` | Yes | Current user |
-| GET | `/api/users` | Yes | Member directory (`?search=` optional) |
+| GET | `/api/users?search=` | Yes | Member directory |
 | GET | `/api/users/me` | Yes | Current user profile |
 | PUT | `/api/users/me` | Yes | Update name, department, bio |
-| POST | `/api/users/me/avatar` | Yes | Upload photo (`avatar` field) |
+| POST | `/api/users/me/avatar` | Yes | Upload photo (`avatar` field, max 2MB) |
+| GET | `/api/users/me/friends` | Yes | Current user's friends |
 | GET | `/api/users/:id` | Yes | View member profile |
-
-#### Planned
-
-| Method | Endpoint | Phase |
-|--------|----------|-------|
-| GET | `/api/friends` | 3 |
-| POST | `/api/friends/request` | 3 |
-| PUT | `/api/friends/:id` | 3 |
-| GET | `/api/conversations` | 4 |
-| POST | `/api/conversations` | 4 |
-| GET | `/api/conversations/:id/messages` | 4 |
-| POST | `/api/conversations/:id/messages` | 4 |
-| POST | `/api/groups` | 4 |
-| POST | `/api/groups/:id/members` | 4 |
-
-### Running the Project
-
-```bash
-npm install
-npm start
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-Development with auto-restart:
-
-```bash
-npm run dev
-```
+| POST | `/api/users/:id/friends` | Yes | Add a friend |
+| DELETE | `/api/users/:id/friends` | Yes | Remove a friend |
+| GET | `/api/messages/public` | Yes | Public chat messages |
+| POST | `/api/messages/public` | Yes | Send public message (max 500 chars) |
+| GET | `/api/messages/direct/:userId` | Yes | Direct messages with a member |
+| POST | `/api/messages/direct/:userId` | Yes | Send direct message |
 
 ---
 
-## 3. Code Summary
+## 5. Code Summary
 
 ### Repository Structure
 
 ```
 InnerCircle/
-├── frontend/                    # Client (HTML, CSS, JavaScript)
-│   ├── index.html               # Single-page app shell and all views
-│   ├── style.css                # Global and component styles
-│   └── js/
-│       ├── app.js               # Entry point, routing, event wiring
-│       ├── api.js               # fetch wrappers for all API calls
-│       ├── auth.js              # Login, signup, logout, session check
-│       ├── directory.js         # Member directory list and search
-│       └── profile.js           # Profile edit, avatar upload, member view
-├── backend/                     # Server (Node.js + Express)
-│   ├── server.js                # App entry, middleware, static files
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx               Top-level state and routing
+│   │   ├── api.js                fetch wrappers for all API calls
+│   │   ├── main.jsx              React entry point
+│   │   ├── index.css             Global styles
+│   │   ├── components/
+│   │   │   ├── Avatar.jsx        User avatar (image or initials)
+│   │   │   ├── InlineForm.jsx    Reusable send form (sticky)
+│   │   │   ├── MessageItem.jsx   Single message row
+│   │   │   ├── NavBar.jsx        Fixed bottom navigation bar
+│   │   │   └── Toast.jsx         Fade-in notification
+│   │   ├── screens/
+│   │   │   ├── LandingScreen.jsx
+│   │   │   ├── LoginScreen.jsx
+│   │   │   ├── SignupScreen.jsx
+│   │   │   ├── HomeScreen.jsx
+│   │   │   ├── DirectoryScreen.jsx
+│   │   │   ├── ProfileScreen.jsx
+│   │   │   ├── MessagesScreen.jsx
+│   │   │   └── MemberScreen.jsx
+│   │   └── test/
+│   │       ├── components.test.jsx
+│   │       ├── screens.test.jsx
+│   │       └── setup.js
+│   ├── dist/                     Production build (served by Express)
+│   ├── index.html
+│   ├── vite.config.js
+│   └── package.json
+├── backend/
+│   ├── server.js                 HTTP server entry point
+│   ├── app.js                    Express app, middleware, routes
 │   ├── routes/
-│   │   ├── auth.js              # Signup, login, logout, /me
-│   │   └── users.js             # Directory, profile, avatar routes
+│   │   ├── auth.js               Signup, login, logout, /me
+│   │   ├── users.js              Directory, profile, avatar, friends
+│   │   └── messages.js           Public and direct messages
 │   ├── middleware/
-│   │   ├── requireAuth.js       # Blocks unauthenticated API access
-│   │   └── upload.js            # Multer config for profile photos
+│   │   ├── requireAuth.js        Session guard (returns 401)
+│   │   └── upload.js             Multer config for profile photos
 │   ├── data/
-│   │   ├── store.js             # JSON file CRUD and search
-│   │   └── users.json           # User records (gitignored at runtime)
-│   └── uploads/                 # Stored profile images
-├── docs/
-│   ├── project.md               # This document
-│   └── development-plan.md      # Phase checklist
-├── package.json
-└── README.md
+│   │   ├── db.js                 SQLite connection and schema init
+│   │   ├── store.js              User and friends CRUD
+│   │   └── messages-store.js     Message CRUD
+│   └── uploads/                  Stored profile images
+├── test/
+│   ├── helper.js                 In-memory test server + request helper
+│   ├── auth.test.js              10 auth tests
+│   ├── users.test.js             11 user/friends tests
+│   ├── users-extra.test.js       9 additional user tests
+│   ├── messages.test.js          11 messaging tests
+│   └── messages-extra.test.js    7 additional message tests
+└── docs/
+    ├── project.md                This document
+    └── development-plan.md       Phase checklist and file structure
 ```
 
-### Data Model
+### Data Models
 
-#### User (stored in `users.json`)
+#### User (SQLite `users` table)
 
-```javascript
+```js
 {
-  id: string,           // 32-char hex ID
+  id: string,           // 32-char hex
   email: string,        // normalized lowercase
-  passwordHash: string, // bcrypt hash (never sent to client)
+  passwordHash: string, // bcrypt (never sent to client)
   name: string,
   department: string,
   bio: string,
-  thumbnailUrl: string, // e.g. "/uploads/userId-timestamp.png"
-  createdAt: string     // ISO 8601 timestamp
+  thumbnailUrl: string, // "/uploads/filename.ext"
+  createdAt: string     // ISO 8601
 }
 ```
 
-Public API responses strip `passwordHash` via `toPublicUser()`.
+#### Message (SQLite `messages` table)
+
+```js
+{
+  id: string,
+  senderId: string,
+  recipientId: string | null,  // null = public
+  text: string,                // max 500 chars
+  createdAt: string
+}
+```
 
 ### Backend Summary
 
-#### `backend/server.js`
-
-- Creates Express app on port 3000
-- Parses JSON request bodies
-- Configures `express-session` with HTTP-only cookie (7-day max age)
-- Mounts `/api/auth` and `/api/users` routers
-- Serves uploaded images at `/uploads`
-- Serves frontend static files
-- Fallback route sends `index.html` for SPA-style navigation
-
 #### `backend/data/store.js`
-
-Data access layer for the JSON file store:
 
 | Function | Purpose |
 |----------|---------|
-| `readUsers()` | Load all users from disk |
-| `writeUsers(users)` | Persist users array |
-| `createUser(...)` | Insert new user with generated ID |
 | `findUserByEmail(email)` | Lookup for login/signup |
 | `findUserById(id)` | Lookup by primary key |
+| `createUser(...)` | Insert new user |
 | `updateUser(id, updates)` | Patch name, department, bio, thumbnail |
 | `searchUsers(query)` | Filter by name, email, department, bio |
-| `toPublicUser(user)` | Remove sensitive fields for API responses |
+| `listFriends(userId)` | Return all friends of a user |
+| `addFriend(userId, friendId)` | Bidirectional insert |
+| `removeFriend(userId, friendId)` | Returns null if not friends (404) |
+| `toPublicUser(user, viewerId)` | Strips passwordHash, adds `isFriend` |
 
 #### `backend/routes/auth.js`
-
-- **Signup:** Validates fields, enforces 8+ char password, hashes with bcrypt, creates session
-- **Login:** Verifies email/password, creates session
-- **Logout:** Destroys session and clears cookie
-- **Me:** Returns current user from session or 401
+- Signup: validates fields, enforces 8+ char password, bcrypt hash, creates session
+- Login: verifies credentials, creates session
+- Logout: destroys session
+- Me: returns current user or 401
 
 #### `backend/routes/users.js`
+- Directory search, profile read/update, avatar upload, friends add/remove
+- Avatar upload removes old file before saving new one
 
-- **GET /** — List users with optional `?search=` query (auth required)
-- **GET /me** — Current user profile
-- **PUT /me** — Update profile fields
-- **POST /me/avatar** — Multer upload; replaces old image file on disk
-- **GET /:id** — Single member profile (must be defined after `/me` routes)
-
-#### `backend/middleware/requireAuth.js`
-
-Checks `req.session.userId`; returns 401 if missing.
-
-#### `backend/middleware/upload.js`
-
-Multer disk storage in `backend/uploads/`:
-
-- Allowed types: JPEG, PNG, GIF, WebP
-- Max size: 2MB
-- Filename: filename pattern: `{userId}-{timestamp}-{random}.ext`
+#### `backend/routes/messages.js`
+- Public messages: list (capped at 100), post (max 500 chars)
+- Direct messages: list conversation, post to user (404 if user not found)
 
 ### Frontend Summary
 
-The frontend is a **single-page application** built with vanilla JavaScript modules — no framework. Views are toggled with the HTML `hidden` attribute.
+#### `App.jsx`
+- Holds `currentUser` and `activePage` in state — shared across all screens
+- Restores session on load via `GET /api/auth/me`
+- `localStorage` persists `activePage` across page refreshes; cleared on logout
+- Passes `onToast` callback down to screens; manages toast timer centrally
 
-#### View flow
-
-```
-Landing → Login / Signup → App shell
-                              ├── Home (dashboard cards)
-                              ├── Directory (search + member cards)
-                              ├── My profile (edit form + photo upload)
-                              └── Member profile (read-only, from directory)
-```
-
-#### `frontend/js/app.js`
-
-- Entry point loaded as ES module from `index.html`
-- Manages top-level views (landing, login, signup, app) and app panels (home, directory, profile, member)
-- Initializes directory, profile, and member modules
-- On load, calls `GET /api/auth/me` to restore session
-- Wires navigation buttons, forms, and logout
-
-#### `frontend/js/api.js`
-
-Central `fetch` client with `credentials: "include"` for session cookies:
-
-- JSON requests set `Content-Type: application/json`
-- FormData uploads omit Content-Type (browser sets multipart boundary)
+#### `api.js`
+- Central `fetch` client with `credentials: "include"`
 - Throws on non-OK responses with server error message
 
-#### `frontend/js/auth.js`
+#### Screens
+Each screen manages its own data state (messages, members, form fields) and calls the shared `onToast` callback for notifications.
 
-- `handleSignup`, `handleLogin`, `handleLogout` form handlers
-- `getCurrentUser()` for session restore
-- `showMessage()` utility for inline form feedback
+#### `NavBar.jsx`
+- Fixed bottom bar, `role="tablist"`, `aria-selected` on each tab
+- 64px height, 44px minimum tap target per button
 
-#### `frontend/js/directory.js`
+#### `MessagesScreen.jsx`
+- Two tabs: Public Chat and Direct Messages
+- Public chat polls `GET /api/messages/public` every 15 seconds via `setInterval`
+- Clears interval on unmount
 
-- Renders member cards with avatar (image or initials)
-- Debounced search input (300ms) calls `GET /api/users?search=`
-- "View profile" navigates to member panel
+### Security
 
-#### `frontend/js/profile.js`
-
-- **Profile edit:** Form submit → `PUT /api/users/me`
-- **Avatar upload:** File input change → `POST /api/users/me/avatar`
-- **Member view:** Fetches and renders read-only profile for another user
-
-#### `frontend/index.html`
-
-Semantic HTML sections for each view:
-
-- Public: landing hero, login card, signup card
-- Authenticated: header, nav tabs, four panels
-
-#### `frontend/style.css`
-
-- CSS custom properties for brand colors and spacing
-- Responsive layout (mobile-first with breakpoints)
-- Components: buttons, forms, cards, avatars, member cards, nav tabs
-- Professional minimal aesthetic (blue primary, neutral grays)
-
-### Security Notes
-
-- Passwords hashed with bcrypt (cost factor 10); never returned in API
-- Sessions stored server-side; cookie is HTTP-only
-- Protected routes require valid session via `requireAuth`
-- Uploads restricted by MIME type and file size
-- Old avatar files deleted when a new one is uploaded
+- Passwords hashed with bcrypt (cost 10); never returned in API responses
+- Sessions stored server-side; cookie is `httpOnly`, `sameSite=lax`
+- All routes except signup/login require valid session via `requireAuth`
+- Uploads restricted to JPEG, PNG, GIF, WebP; max 2MB
+- React escapes all rendered user content by default (no XSS)
 
 ### Dependencies
 
@@ -423,22 +326,12 @@ Semantic HTML sections for each view:
 | `express-session` | Session management |
 | `bcryptjs` | Password hashing |
 | `multer` | Multipart file upload handling |
+| `better-sqlite3` | SQLite data store |
+| `react` / `react-dom` | UI framework |
+| `vite` / `@vitejs/plugin-react` | Build tool and dev server |
+| `vitest` | Frontend test runner |
+| `@testing-library/react` | Component testing utilities |
 
 ---
 
-## Appendix: UI Pages
-
-| Page | Route (logical) | Description |
-|------|-----------------|-------------|
-| Landing | Public | Brand intro, links to login/signup |
-| Login | Public | Email + password form |
-| Signup | Public | Registration form |
-| Home | Authenticated | Welcome and quick links to directory/profile |
-| Directory | Authenticated | Searchable employee list |
-| My profile | Authenticated | Edit profile and upload photo |
-| Member profile | Authenticated | View another employee (from directory) |
-| Messages | Authenticated | Planned Phase 4 |
-
----
-
-*Last updated: Phase 0–2 complete. Phases 3–5 planned.*
+*Last updated: All phases complete. 48 backend + 17 frontend tests passing.*
